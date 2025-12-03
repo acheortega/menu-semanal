@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Planificador de Menú Semanal Saludable</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Tailwind CSS desde CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Estilos específicos para impresión */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: white;
+      }
+      .print-area {
+        box-shadow: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-amber-50 via-rose-50 to-emerald-50 min-h-screen text-slate-800">
+  <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 md:py-8">
+    <!-- Encabezado -->
+    <header class="mb-5 md:mb-8">
+      <h1 class="text-2xl md:text-4xl font-extrabold text-rose-600 flex items-center gap-2 flex-wrap">
+        🥗 Planificador de Menú Semanal Saludable
+      </h1>
+      <p class="mt-2 text-slate-600 text-sm md:text-base">
+        Organiza tus comidas, genera sugerencias saludables, crea la lista de la compra 🛒
+        e imprime todo sin perder tus datos.
+      </p>
+    </header>
+
+    <!-- Instrucciones -->
+    <section class="no-print mb-5 bg-white/90 backdrop-blur-sm border border-rose-100 rounded-2xl p-3 sm:p-4 md:p-5 shadow-sm">
+      <h2 class="text-base md:text-lg font-semibold text-rose-600 mb-2 flex items-center gap-2">
+        ℹ️ Cómo usar esta aplicación
+      </h2>
+      <ol class="list-decimal list-inside space-y-1 text-xs sm:text-sm md:text-base text-slate-700">
+        <li>Introduce tus platos en cada celda del menú (desayuno, comida y cena).</li>
+        <li>
+          La <strong>comida</strong> y la <strong>cena</strong> tienen dos campos:
+          <span class="font-medium">1º plato</span> (sopa, ensalada, crema…) y
+          <span class="font-medium">2º plato</span> (proteína, guarnición…).
+        </li>
+        <li>Pulsa <span class="font-medium">“Rellenar menú aleatorio saludable”</span> para generar ideas:
+          evita repeticiones excesivas y combinaciones poco equilibradas (por ejemplo, pasta a mediodía y por la noche el mismo día).
+        </li>
+        <li>Pulsa <span class="font-medium">“Generar lista de la compra”</span> para crear una lista con todos los platos (y algunos ingredientes base).</li>
+        <li>Usa <span class="font-medium">“Vaciar todo”</span> si quieres empezar desde cero.</li>
+        <li>Pulsa <span class="font-medium">“Imprimir menú y lista”</span> para sacar tu plan en papel. Los datos no se borran al imprimir.</li>
+        <li>
+          💻 Para usarlo: guarda este archivo como <code>menu_semanal.html</code> en tu ordenador o móvil y
+          ábrelo con doble clic o tocando el archivo.
+        </li>
+      </ol>
+      <p class="mt-3 text-xs sm:text-sm text-slate-500">
+        👨‍👩‍👧‍👦 <strong>Modo familia (opcional):</strong> debajo del menú tienes un bloque de notas para adaptar las raciones
+        a tu familia (por ejemplo, dos adultos y tres peques).
+      </p>
+    </section>
+
+    <!-- Controles -->
+    <section class="no-print mb-5 flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+      <button id="generateMenuBtn"
+        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-sm md:text-base font-semibold shadow-md transition active:scale-[0.98]">
+        🎲 Rellenar menú aleatorio saludable
+      </button>
+      <button id="generateShoppingBtn"
+        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-full bg-amber-400 hover:bg-amber-500 text-white text-sm md:text-base font-semibold shadow-md transition active:scale-[0.98]">
+        🛒 Generar lista de la compra
+      </button>
+      <button id="clearMenuBtn"
+        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-semibold shadow-md transition active:scale-[0.98]">
+        🧼 Vaciar todo
+      </button>
+      <button id="printBtn"
+        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-full bg-teal-500 hover:bg-teal-600 text-white text-sm md:text-base font-semibold shadow-md transition active:scale-[0.98]">
+        🖨️ Imprimir menú y lista
+      </button>
+    </section>
+
+    <!-- Zona imprimible (menú + lista) -->
+    <div class="print-area bg-white/95 backdrop-blur-sm border border-rose-100 rounded-2xl p-3 sm:p-4 md:p-6 shadow-md space-y-6">
+
+      <!-- Menú semanal -->
+      <section>
+        <h2 class="text-lg md:text-xl font-semibold text-rose-600 mb-2 md:mb-3 flex items-center gap-2">
+          📅 Menú semanal
+        </h2>
+        <div class="overflow-x-auto rounded-xl border border-rose-100">
+          <table class="min-w-full text-[11px] sm:text-xs md:text-sm bg-white">
+            <thead class="bg-rose-50">
+              <tr>
+                <th class="border border-rose-100 px-2 py-2 text-left font-semibold text-rose-700">Día</th>
+                <th class="border border-rose-100 px-2 py-2 text-left font-semibold text-rose-700">🍳 Desayuno</th>
+                <th class="border border-rose-100 px-2 py-2 text-left font-semibold text-rose-700">🥗 Comida</th>
+                <th class="border border-rose-100 px-2 py-2 text-left font-semibold text-rose-700">🌙 Cena</th>
+              </tr>
+            </thead>
+            <tbody id="menuBody">
+              <!-- Filas generadas por JS -->
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-2 text-[11px] sm:text-xs text-slate-500">
+          👉 En móvil puedes deslizar horizontalmente la tabla si no se ve completa.
+        </p>
+      </section>
+
+      <!-- Notas para familia -->
+      <section>
+        <h2 class="text-base md:text-lg font-semibold text-rose-600 mb-2 flex items-center gap-2">
+          👨‍👩‍👧‍👦 Notas para la familia (opcional)
+        </h2>
+        <p class="text-[11px] sm:text-xs md:text-sm text-slate-600 mb-2">
+          Usa este espacio para adaptar el menú a tu familia (por ejemplo, <strong>2 adultos y 3 niños</strong>,
+          raciones especiales, alergias, alternativas para peques, etc.).
+        </p>
+        <textarea
+          id="familyNotes"
+          class="w-full border border-rose-100 rounded-xl px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 min-h-[80px]"
+          placeholder="Ej.: Lunes: los niños cenan sopa y tortilla francesa. Martes: menú vegetariano para el adulto 1..."
+        ></textarea>
+      </section>
+
+      <!-- Lista de la compra -->
+      <section>
+        <h2 class="text-lg md:text-xl font-semibold text-rose-600 mb-2 md:mb-3 flex items-center gap-2">
+          🛒 Lista de la compra
+        </h2>
+        <p class="text-[11px] sm:text-xs md:text-sm text-slate-600 mb-2">
+          Pulsa <span class="font-medium">“Generar lista de la compra”</span> para crear o actualizar esta sección.
+          Marca las casillas cuando vayas comprando.
+        </p>
+        <div id="shoppingList" class="border border-rose-100 rounded-2xl p-3 md:p-4 min-h-[80px] text-sm md:text-base">
+          <!-- Ítems generados por JS -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Pie -->
+    <footer class="mt-5 text-[11px] sm:text-xs md:text-sm text-slate-500 text-center no-print">
+      🌸 Menú saludable con toque Primavera Brillante, pensado para funcionar también en tu móvil.
+    </footer>
+  </div>
+
+  <!-- JavaScript de la aplicación -->
+  <script>
+    // --- Datos base para sugerencias saludables ---
+
+    const DAYS = [
+      "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"
+    ];
+
+    const DISHES = {
+      breakfast: [
+        { name: "Yogur natural con frutas y nueces", tags: ["proteína", "fruta"] },
+        { name: "Tostadas integrales con aguacate y tomate", tags: ["cereales", "salado"] },
+        { name: "Avena con leche y plátano", tags: ["cereales"] },
+        { name: "Tortilla francesa con espinacas", tags: ["proteína", "huevos"] },
+        { name: "Batido verde (espinaca, manzana, pepino)", tags: ["verduras", "fruta"] },
+        { name: "Requesón con frutos rojos", tags: ["proteína", "fruta"] },
+        { name: "Pan integral con hummus y pepino", tags: ["cereales", "legumbre"] }
+      ],
+      first: [
+        { name: "Crema de calabaza", tags: ["verduras"] },
+        { name: "Ensalada verde con tomate y zanahoria", tags: ["verduras"] },
+        { name: "Sopa de verduras", tags: ["verduras"] },
+        { name: "Gazpacho", tags: ["verduras"] },
+        { name: "Ensalada de garbanzos y verduras", tags: ["legumbre", "verduras"] },
+        { name: "Ensalada de quinoa con verduras", tags: ["cereales", "verduras"] },
+        { name: "Ensalada de pasta integral con verduras", tags: ["cereales", "pasta"] },
+        { name: "Crema de calabacín y puerros", tags: ["verduras"] }
+      ],
+      second: [
+        { name: "Pollo al horno con verduras", tags: ["proteína"] },
+        { name: "Pescado al horno con patata y brócoli", tags: ["proteína"] },
+        { name: "Lentejas estofadas con verduras", tags: ["legumbre"] },
+        { name: "Salteado de tofu con verduras", tags: ["proteína", "vegetariano"] },
+        { name: "Tortilla de patata con ensalada", tags: ["huevos"] },
+        { name: "Salmón a la plancha con ensalada", tags: ["proteína"] },
+        { name: "Pavo a la plancha con arroz integral", tags: ["proteína", "cereales"] },
+        { name: "Verduras al horno con hummus", tags: ["legumbre", "vegetariano"] },
+        { name: "Pasta integral con salsa de tomate natural y albahaca", tags: ["pasta", "cereales"] },
+        { name: "Hamburguesa casera de garbanzos con ensalada", tags: ["legumbre", "vegetariano"] }
+      ]
+    };
+
+    // Ingredientes base (opcional) asociados a algunos platos
+    const INGREDIENTS_BY_DISH = {
+      "Yogur natural con frutas y nueces": ["Yogur natural", "Fruta variada", "Nueces"],
+      "Tostadas integrales con aguacate y tomate": ["Pan integral", "Aguacate", "Tomate"],
+      "Avena con leche y plátano": ["Avena", "Leche o bebida vegetal", "Plátano"],
+      "Tortilla francesa con espinacas": ["Huevos", "Espinacas", "Aceite de oliva"],
+      "Crema de calabaza": ["Calabaza", "Cebolla", "Caldo de verduras"],
+      "Ensalada verde con tomate y zanahoria": ["Lechuga", "Tomate", "Zanahoria"],
+      "Sopa de verduras": ["Verduras variadas", "Caldo de verduras"],
+      "Ensalada de garbanzos y verduras": ["Garbanzos cocidos", "Pimiento", "Cebolla", "Tomate"],
+      "Pollo al horno con verduras": ["Pollo", "Zanahoria", "Calabacín", "Cebolla"],
+      "Pescado al horno con patata y brócoli": ["Filetes de pescado", "Patatas", "Brócoli"],
+      "Lentejas estofadas con verduras": ["Lentejas", "Zanahoria", "Cebolla", "Pimiento"],
+      "Pasta integral con salsa de tomate natural y albahaca": ["Pasta integral", "Tomate triturado", "Albahaca"]
+    };
+
+    // --- Construcción dinámica de la tabla de menú ---
+
+    function createMenuTable() {
+      const tbody = document.getElementById("menuBody");
+      tbody.innerHTML = "";
+
+      DAYS.forEach((day, dayIndex) => {
+        const tr = document.createElement("tr");
+        tr.className = dayIndex % 2 === 0 ? "bg-amber-50/40" : "bg-white";
+
+        // Columna Día
+        const dayCell = document.createElement("td");
+        dayCell.className = "border border-rose-100 px-2 py-2 font-semibold text-rose-600 whitespace-nowrap";
+        dayCell.textContent = day;
+        tr.appendChild(dayCell);
+
+        // Columna Desayuno
+        const breakfastCell = document.createElement("td");
+        breakfastCell.className = "border border-rose-100 px-2 py-2 align-top";
+        breakfastCell.appendChild(
+          createMealInput("Desayuno", "breakfast", "single", dayIndex)
+        );
+        tr.appendChild(breakfastCell);
+
+        // Columna Comida (1º y 2º)
+        const lunchCell = document.createElement("td");
+        lunchCell.className = "border border-rose-100 px-2 py-2 align-top";
+        lunchCell.appendChild(
+          createDualMealInputs("Comida", dayIndex, "lunch")
+        );
+        tr.appendChild(lunchCell);
+
+        // Columna Cena (1º y 2º)
+        const dinnerCell = document.createElement("td");
+        dinnerCell.className = "border border-rose-100 px-2 py-2 align-top";
+        dinnerCell.appendChild(
+          createDualMealInputs("Cena", dayIndex, "dinner")
+        );
+        tr.appendChild(dinnerCell);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function createMealInput(labelText, meal, course, dayIndex) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex flex-col gap-1";
+
+      const label = document.createElement("label");
+      label.className = "text-[10px] sm:text-[11px] md:text-xs text-slate-500";
+      label.textContent = labelText;
+      wrapper.appendChild(label);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.className =
+        "w-full border border-rose-100 rounded-lg px-2 py-1 text-[11px] sm:text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300";
+      input.setAttribute("data-day", dayIndex);
+      input.setAttribute("data-meal", meal);
+      input.setAttribute("data-course", course);
+      wrapper.appendChild(input);
+
+      return wrapper;
+    }
+
+    function createDualMealInputs(title, dayIndex, meal) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex flex-col gap-1";
+
+      const titleDiv = document.createElement("div");
+      titleDiv.className = "text-[10px] sm:text-[11px] md:text-xs text-slate-500 font-medium";
+      titleDiv.textContent = title + " (1º y 2º)";
+      wrapper.appendChild(titleDiv);
+
+      const firstInput = document.createElement("input");
+      firstInput.type = "text";
+      firstInput.placeholder = "1º plato (ensalada, crema...)";
+      firstInput.className =
+        "w-full border border-rose-100 rounded-lg px-2 py-1 text-[11px] sm:text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300";
+      firstInput.setAttribute("data-day", dayIndex);
+      firstInput.setAttribute("data-meal", meal);
+      firstInput.setAttribute("data-course", "first");
+      wrapper.appendChild(firstInput);
+
+      const secondInput = document.createElement("input");
+      secondInput.type = "text";
+      secondInput.placeholder = "2º plato (proteína, guarnición...)";
+      secondInput.className =
+        "w-full border border-rose-100 rounded-lg px-2 py-1 text-[11px] sm:text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300";
+      secondInput.setAttribute("data-day", dayIndex);
+      secondInput.setAttribute("data-meal", meal);
+      secondInput.setAttribute("data-course", "second");
+      wrapper.appendChild(secondInput);
+
+      return wrapper;
+    }
+
+    // --- Utilidades para generación aleatoria ---
+
+    function getRandomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function hasTag(dish, tag) {
+      return dish.tags && dish.tags.includes(tag);
+    }
+
+    function pickDishForSlot(slotType, options) {
+      // slotType: "breakfast" | "first" | "second"
+      const list = DISHES[slotType];
+      if (!list || list.length === 0) return "";
+
+      const maxAttempts = 20;
+      let chosen = null;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const candidate = getRandomItem(list);
+
+        // Evitar demasiadas repeticiones globales
+        if (options.usedNames.has(candidate.name)) {
+          continue;
+        }
+
+        // Evitar combos desequilibrados en el mismo día:
+        // No permitir que haya pasta en comida y cena el mismo día
+        if (options.sameDayCategories.has("pasta") && hasTag(candidate, "pasta")) {
+          continue;
+        }
+
+        chosen = candidate;
+        break;
+      }
+
+      // Si no hemos podido encontrar algo distinto, devolvemos cualquiera
+      if (!chosen) {
+        chosen = getRandomItem(list);
+      }
+
+      return chosen.name;
+    }
+
+    function updateSameDayCategories(dishName, sameDayCategories) {
+      const lower = dishName.toLowerCase();
+      if (lower.includes("pasta")) {
+        sameDayCategories.add("pasta");
+      }
+    }
+
+    // --- Generar menú aleatorio saludable ---
+
+    function generateHealthyMenu() {
+      const inputs = document.querySelectorAll("input[data-meal]");
+      const usedNames = new Set();
+
+      // Recoger lo que ya hay escrito para intentar respetarlo
+      inputs.forEach((input) => {
+        const value = input.value.trim();
+        if (value) {
+          usedNames.add(value);
+        }
+      });
+
+      // Por cada día generamos huecos vacíos, evitando desequilibrios
+      DAYS.forEach((_, dayIndex) => {
+        const sameDayCategories = new Set();
+
+        // Desayuno
+        const breakfastInput = document.querySelector(
+          `input[data-day="${dayIndex}"][data-meal="breakfast"][data-course="single"]`
+        );
+        if (breakfastInput && !breakfastInput.value.trim()) {
+          const dishName = pickDishForSlot("breakfast", { usedNames, sameDayCategories });
+          breakfastInput.value = dishName;
+          usedNames.add(dishName);
+        } else if (breakfastInput && breakfastInput.value.trim()) {
+          updateSameDayCategories(breakfastInput.value.trim(), sameDayCategories);
+        }
+
+        // Comida 1º y 2º
+        const lunchFirst = document.querySelector(
+          `input[data-day="${dayIndex}"][data-meal="lunch"][data-course="first"]`
+        );
+        const lunchSecond = document.querySelector(
+          `input[data-day="${dayIndex}"][data-meal="lunch"][data-course="second"]`
+        );
+
+        if (lunchFirst && !lunchFirst.value.trim()) {
+          const dishName = pickDishForSlot("first", { usedNames, sameDayCategories });
+          lunchFirst.value = dishName;
+          usedNames.add(dishName);
+          updateSameDayCategories(dishName, sameDayCategories);
+        } else if (lunchFirst && lunchFirst.value.trim()) {
+          updateSameDayCategories(lunchFirst.value.trim(), sameDayCategories);
+        }
+
+        if (lunchSecond && !lunchSecond.value.trim()) {
+          const dishName = pickDishForSlot("second", { usedNames, sameDayCategories });
+          lunchSecond.value = dishName;
+          usedNames.add(dishName);
+          updateSameDayCategories(dishName, sameDayCategories);
+        } else if (lunchSecond && lunchSecond.value.trim()) {
+          updateSameDayCategories(lunchSecond.value.trim(), sameDayCategories);
+        }
+
+        // Cena 1º y 2º
+        const dinnerFirst = document.querySelector(
+          `input[data-day="${dayIndex}"][data-meal="dinner"][data-course="first"]`
+        );
+        const dinnerSecond = document.querySelector(
+          `input[data-day="${dayIndex}"][data-meal="dinner"][data-course="second"]`
+        );
+
+        if (dinnerFirst && !dinnerFirst.value.trim()) {
+          const dishName = pickDishForSlot("first", { usedNames, sameDayCategories });
+          dinnerFirst.value = dishName;
+          usedNames.add(dishName);
+          updateSameDayCategories(dishName, sameDayCategories);
+        } else if (dinnerFirst && dinnerFirst.value.trim()) {
+          updateSameDayCategories(dinnerFirst.value.trim(), sameDayCategories);
+        }
+
+        if (dinnerSecond && !dinnerSecond.value.trim()) {
+          const dishName = pickDishForSlot("second", { usedNames, sameDayCategories });
+          dinnerSecond.value = dishName;
+          usedNames.add(dishName);
+          updateSameDayCategories(dishName, sameDayCategories);
+        } else if (dinnerSecond && dinnerSecond.value.trim()) {
+          updateSameDayCategories(dinnerSecond.value.trim(), sameDayCategories);
+        }
+      });
+    }
+
+    // --- Generar lista de la compra ---
+
+    function generateShoppingList() {
+      const inputs = document.querySelectorAll("input[data-meal]");
+      const items = new Set();      // elementos finales (ingredientes o platos)
+      const rawDishes = new Set();  // nombres de platos
+
+      inputs.forEach((input) => {
+        const value = input.value.trim();
+        if (!value) return;
+
+        rawDishes.add(value);
+
+        // Si tenemos ingredientes asociados a ese plato, los añadimos
+        const ingredients = INGREDIENTS_BY_DISH[value];
+        if (ingredients && Array.isArray(ingredients)) {
+          ingredients.forEach((ing) => items.add(ing));
+        } else {
+          // Si no conocemos los ingredientes, añadimos el plato como ítem
+          items.add(value);
+        }
+      });
+
+      const shoppingListDiv = document.getElementById("shoppingList");
+      shoppingListDiv.innerHTML = "";
+
+      if (items.size === 0) {
+        shoppingListDiv.innerHTML =
+          '<p class="text-slate-400 text-sm">Aún no hay platos en el menú. Añade platos o genera un menú aleatorio para crear la lista de la compra.</p>';
+        return;
+      }
+
+      const info = document.createElement("p");
+      info.className = "text-xs md:text-sm text-slate-500 mb-2";
+      info.textContent = "Marca los productos según los vayas comprando:";
+      shoppingListDiv.appendChild(info);
+
+      const listContainer = document.createElement("div");
+      listContainer.className =
+        "grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2";
+
+      Array.from(items)
+        .sort((a, b) => a.localeCompare(b, "es"))
+        .forEach((item) => {
+          const line = document.createElement("label");
+          line.className =
+            "flex items-center gap-2 text-xs md:text-sm text-slate-700";
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "w-3 h-3 md:w-4 md:h-4";
+
+          const span = document.createElement("span");
+          span.textContent = item;
+
+          line.appendChild(checkbox);
+          line.appendChild(span);
+
+          listContainer.appendChild(line);
+        });
+
+      shoppingListDiv.appendChild(listContainer);
+    }
+
+    // --- Limpiar menú y lista ---
+
+    function clearAll() {
+      const inputs = document.querySelectorAll("input[data-meal]");
+      inputs.forEach((input) => {
+        input.value = "";
+      });
+
+      const shoppingListDiv = document.getElementById("shoppingList");
+      shoppingListDiv.innerHTML =
+        '<p class="text-slate-400 text-sm">Lista vacía. Genera el menú y luego crea la lista de la compra.</p>';
+
+      const familyNotes = document.getElementById("familyNotes");
+      if (familyNotes) {
+        familyNotes.value = "";
+      }
+    }
+
+    // --- Imprimir ---
+
+    function printPage() {
+      window.print();
+    }
+
+    // --- Inicialización ---
+
+    document.addEventListener("DOMContentLoaded", () => {
+      createMenuTable();
+
+      document
+        .getElementById("generateMenuBtn")
+        .addEventListener("click", generateHealthyMenu);
+      document
+        .getElementById("generateShoppingBtn")
+        .addEventListener("click", generateShoppingList);
+      document
+        .getElementById("clearMenuBtn")
+        .addEventListener("click", clearAll);
+      document
+        .getElementById("printBtn")
+        .addEventListener("click", printPage);
+
+      // Mensaje inicial en lista de la compra
+      const shoppingListDiv = document.getElementById("shoppingList");
+      shoppingListDiv.innerHTML =
+        '<p class="text-slate-400 text-sm">Lista vacía. Genera el menú y luego crea la lista de la compra.</p>';
+    });
+  </script>
+</body>
+</html>
